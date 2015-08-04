@@ -1,15 +1,16 @@
 import com.jgoodies.forms.factories.CC;
 import com.jgoodies.forms.layout.FormLayout;
 import controller.Envolver;
-import controller.MooreNeighbourhood;
 import controller.Runner;
 import controller.SimpleTransition;
 import model.Grid;
 import model.State;
 import view.GridPanel;
+import view.SizeDialog;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
 import java.util.Random;
 
 /**
@@ -21,17 +22,51 @@ public class Application {
 
     public static void main(String ... args) {
         JFrame frame = new JFrame();
-        JMenuBar menuBar = new JMenuBar();
-        JButton start = new JButton("start");
-        JButton next = new JButton("next");
-        JButton pause = new JButton("pause");
-        menuBar.add(start);
-        menuBar.add(next);
-        menuBar.add(pause);
+        frame.setTitle("Game Of Life");
+        JMenuBar toolBar = new JMenuBar();
+        JButton start = new JButton(getImageIcon("/icons/play_icon.png"));
+        start.setToolTipText("Run");
+        start.setBorderPainted(false);
+        JButton reset = new JButton(getImageIcon("/icons/reset_icon.png"));
+        reset.setToolTipText("Clear field");
+        reset.setBorderPainted(false);
+        JButton next = new JButton(getImageIcon("/icons/next_icon.png"));
+        next.setToolTipText("Next step");
+        next.setBorderPainted(false);
+        JButton pause = new JButton(getImageIcon("/icons/pause_icon.png"));
+        pause.setToolTipText("Pause");
+        pause.setBorderPainted(false);
+        JButton size = new JButton(getImageIcon("/icons/size_icon.png"));
+        size.setToolTipText("Set grid size");
+        size.setBorderPainted(false);
+        JButton showGrid = new JButton(getImageIcon("/icons/grid_icon.png"));
+        showGrid.setToolTipText("Enable/disable grid lines");
+        showGrid.setBorderPainted(false);
+        JButton btRandom = new JButton(getImageIcon("/icons/dice_icon.png"));
+        btRandom.setToolTipText("Fill randomly");
+        btRandom.setBorderPainted(false);
 
-        frame.setJMenuBar(menuBar);
-        frame.setSize(new Dimension(1000, 1000));
-        Grid grid = new Grid(300, 300);
+        JButton btAbout = new JButton(getImageIcon("/icons/about_icon.png"));
+        btAbout.setToolTipText("About");
+        btAbout.setBorderPainted(false);
+
+        toolBar.add(start);
+        toolBar.add(next);
+        toolBar.add(pause);
+        toolBar.add(reset);
+        toolBar.add(btRandom);
+        toolBar.add(size);
+        toolBar.add(showGrid);
+        toolBar.add(new JSeparator(SwingConstants.VERTICAL));
+        toolBar.add(btAbout);
+
+
+
+        frame.setJMenuBar(toolBar);
+        Toolkit.getDefaultToolkit().getScreenSize();
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        frame.setSize(screenSize);
+        Grid grid = new Grid(80, 80);
         Envolver envolver = new Envolver(grid, new SimpleTransition());
 
         /*grid.setValueAt(150, 150, State.Full);
@@ -60,10 +95,12 @@ public class Application {
         }
 
 
-        JPanel panel = new GridPanel(grid);
-        panel.setPreferredSize(new Dimension(1000, 1000));
-        frame.setLayout(new FormLayout("pref:grow", "pref:grow"));
-        frame.getContentPane().add(panel, CC.xy(1, 1));
+        GridPanel panel = new GridPanel(grid);
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setPreferredSize(screenSize);
+        //panel.setPreferredSize(screenSize);
+        frame.setLayout(new FormLayout("2dlu, default:grow, 2dlu", "2dlu, default:grow, 2dlu"));
+        frame.getContentPane().add(scrollPane, CC.xy(2, 2));
 
 
         frame.setVisible(true);
@@ -73,11 +110,52 @@ public class Application {
 
         start.addActionListener(e -> runner.start());
         pause.addActionListener(e -> runner.pause());
+        size.addActionListener(e -> new SizeDialog(grid, frame));
+        reset.addActionListener(e -> {
+            runner.pause();
+            grid.init(grid.getWidth(), grid.getHeight());
+            frame.repaint();
+        });
+
+        btRandom.addActionListener(e -> {
+            String result = JOptionPane.showInputDialog(null,"Choose the probability for an filled cell:",
+                    "Input",
+                    JOptionPane.PLAIN_MESSAGE);
+            try {
+                if(Double.parseDouble(result) <= 1.0 && Double.parseDouble(result) >= 0) {
+                    runner.pause();
+                    grid.init(grid.getWidth(), grid.getHeight(), Double.parseDouble(result));
+                    frame.repaint();
+                }
+            }
+            catch (NumberFormatException ex) {
+                // ignore
+            }
+
+        });
+
+        showGrid.addActionListener(e -> {
+            panel.setShowGrid(!panel.isShowGrid());
+            frame.repaint();
+        });
 
         next.addActionListener(e -> {
             envolver.evolve();
             frame.repaint();
         });
+
+        btAbout.addActionListener(e -> {
+            JOptionPane.showMessageDialog(null, "For more information about the rules\nlook to the corresponding wikipedia article.\nNote that we do not look at an infinite grid!\nA cell at the border of the grid has less neighbours than cells in the center.",
+                    "About",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
+    }
+
+    public static ImageIcon getImageIcon(final String pathAndFileName) {
+        final URL url = Application.class.getResource(pathAndFileName);
+        Image image = Toolkit.getDefaultToolkit().getImage(url);
+        Image scaledImage = image.getScaledInstance(30, 30, java.awt.Image.SCALE_SMOOTH);
+        return new ImageIcon(scaledImage);
     }
 
 }

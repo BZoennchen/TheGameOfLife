@@ -16,6 +16,7 @@ import java.awt.geom.Rectangle2D;
 public class GridPanel extends JPanel {
 
     private final Grid grid;
+    private boolean showGrid = true;
 
     public GridPanel(final Grid grid) {
         this.grid = grid;
@@ -40,6 +41,14 @@ public class GridPanel extends JPanel {
         });
     }
 
+    public void setShowGrid(boolean showGrid) {
+        this.showGrid = showGrid;
+    }
+
+    public boolean isShowGrid() {
+        return showGrid;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -60,15 +69,17 @@ public class GridPanel extends JPanel {
             }
         }
 
-        g2d.setColor(Color.LIGHT_GRAY);
-        g2d.setStroke(new BasicStroke(0.3f));
+        if(showGrid) {
+            g2d.setColor(Color.LIGHT_GRAY);
+            g2d.setStroke(new BasicStroke(0.3f));
 
-        for (double x = 0; x < xLine; x += cellSize) {
-            g2d.draw(new Line2D.Double(x, 0, x, yLine));
-        }
+            for (double x = 0; x < xLine; x += cellSize) {
+                g2d.draw(new Line2D.Double(x, 0, x, yLine));
+            }
 
-        for(double y = 0; y < yLine; y += cellSize) {
-            g2d.draw(new Line2D.Double(0, y, xLine, y));
+            for(double y = 0; y < yLine; y += cellSize) {
+                g2d.draw(new Line2D.Double(0, y, xLine, y));
+            }
         }
     }
 }
